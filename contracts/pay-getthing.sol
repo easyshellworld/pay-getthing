@@ -1,45 +1,62 @@
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity >=0.8.2 <0.9.0;
 
-import "hardhat/console.sol";
-//import "_Owner.sol";
+//import "hardhat/console.sol";
+
+      
 
 contract Paygetthing {
-     uint public count=0;
+  
+     address payable public owner;
+     event PaymentReceived(address sender, uint256 amount);
+     event givething(string filehash);
     struct Filegroup{
       string filename;
-      string filehash;
-      string price;
+      //string filehash;
+      uint price;
     }
     Filegroup[] public filegroups;
-    Filegroup public newfile;
-     constructor() {
-       setNewfile("test","hash","0.01");
-     // setNewfile("test1","hash1",0.001);
+    string[]  private fileshash;
+     constructor() {  
+       owner = payable(msg.sender);  
+       setNewfile("file1","hash1",1);
     }
-   // Filegroup[] private  filegroups;
-    uint payUpFee = 0.001 ether;
-    function setpayUpFee(uint _fee) public {
-        payUpFee = _fee;
-        console.log(payUpFee);
-    }
-    modifier Payfee() {
-    require(msg.value  >= payUpFee);
-    _;
-  }
+ 
+ 
 
-   function setNewfile(string memory _filename ,string memory _filehash, string memory _price) public {
-       count++;
-       filegroups[count]=Filegroup(_filename,_filehash,_price);
+    //string memory _filehash, string memory _price
+   function setNewfile(string memory _filename,string memory _filehash, uint _price) public {
+
+       filegroups.push(Filegroup(_filename,_price));
+       fileshash.push(_filehash);
+
        // filegroups.push(Filegroup(_filename,_filehash,_price));
         //console.log(filegroups[0].filehash);
     } 
 
 
 
-    function buyThing() public payable Payfee{
-      require(msg.value == payUpFee);
-      console.log(filegroups[count].filehash);
+    function buyThing(uint _id) public payable {
+      require(msg.value >= filegroups[_id].price , "Insufficient payment");
+      emit PaymentReceived(msg.sender, msg.value);
+       payable(msg.sender).transfer(msg.value); 
+       //string memory res=fileshash[_id];
+      emit givething(fileshash[_id]); 
+     // console.log(filegroups[_id].filename);
+    //  console.log(fileshash[_id]);
+     
     //do anything
+
   } 
+   
+
+/*   function getfilename() public view returns (Filegroup[]) {
+
+     return  filegroups;
+  }  */
+
+       function withdraw() public {
+        require(msg.sender == owner, "Only the owner can withdraw");
+        payable(msg.sender).transfer(address(this).balance);
+    }
     
 }
